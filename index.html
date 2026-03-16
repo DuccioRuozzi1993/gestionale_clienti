@@ -158,6 +158,26 @@
 
   .backup-btn:hover { border-color: var(--gold); color: var(--gold-light); }
 
+  .sidebar-credit {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 10px;
+    font-weight: 300;
+    color: var(--text-3);
+    text-align: center;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+  }
+
+  .sidebar-credit span {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.01em;
+  }
+
   /* ── MAIN ── */
   #main {
     flex: 1;
@@ -700,6 +720,7 @@
   .canale-presenza { background: var(--green-dim); color: var(--green); }
   .canale-email { background: var(--purple-dim); color: var(--purple); }
   .canale-videocall { background: var(--orange-dim); color: var(--orange); }
+  .canale-whatsapp { background: rgba(37,211,102,0.12); color: #25D366; }
 
   .contatto-note { font-size: 13px; color: var(--text); flex: 1; line-height: 1.6; }
 
@@ -1609,6 +1630,9 @@
       <button class="backup-btn" onclick="esportaDati()">⬇ Esporta backup</button>
       <button class="backup-btn" onclick="document.getElementById('import-file').click()">⬆ Importa backup</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importaDati(event)">
+      <div class="sidebar-credit">
+        Designed by <span>Duccio Ruozzi</span> and <span>Claude</span> · 2026
+      </div>
     </div>
   </nav>
 
@@ -1937,6 +1961,7 @@
           <option value="presenza">🤝 In presenza</option>
           <option value="email">📧 Email</option>
           <option value="videocall">💻 Videocall</option>
+          <option value="whatsapp">📱 WhatsApp</option>
         </select>
       </div>
     </div>
@@ -2320,6 +2345,39 @@ function migrazioneBudget(statoTarget) {
   if (!statoTarget.impostazioni) statoTarget.impostazioni = {};
   if (!statoTarget.impostazioni.dimensioneBatch) statoTarget.impostazioni.dimensioneBatch = 5;
   if (statoTarget.impostazioni.cooldownSenzaRisposta == null) statoTarget.impostazioni.cooldownSenzaRisposta = 2;
+
+  // Migrazione: campagne con clienti senza clienteId → crea automaticamente il cliente
+  (statoTarget.campagne || []).forEach(camp => {
+    (camp.clienti || []).forEach(cc => {
+      if (!cc.clienteId && cc.cdg && !cc.dismisso) {
+        // Controlla se esiste già un cliente con lo stesso CDG
+        let clienteEsistente = (statoTarget.clienti || []).find(c => c.cdg === cc.cdg);
+        if (!clienteEsistente) {
+          clienteEsistente = {
+            id: uid(),
+            cdg: cc.cdg,
+            ragioneSociale: cc.ragioneSociale || cc.cdg,
+            settore: '',
+            stato: 'prospect',
+            primoCont: '',
+            note: `Inserito automaticamente da campagna "${camp.nome || ''}"`,
+            referenti: [],
+            bisogniAzienda: {},
+            bisogniPrivato: {},
+            contatti: [],
+            impegniFuturi: [],
+            vendite: [],
+            ultimoContatto: null,
+            campagneAttive: [],
+            daCampagna: true
+          };
+          statoTarget.clienti.push(clienteEsistente);
+        }
+        cc.clienteId = clienteEsistente.id;
+        cc.ragioneSociale = clienteEsistente.ragioneSociale;
+      }
+    });
+  });
 }
 
 function caricaStato() {
@@ -2334,6 +2392,8 @@ function caricaStato() {
       migrazioneBudget(stato);
       // Garantisci struttura su tutti i clienti caricati
       (stato.clienti || []).forEach(garantisciStruttura);
+      // Flush migrazione (incluse eventuali creazioni automatiche da campagna)
+      _scriviLocalStorage(JSON.stringify(stato));
     } catch(e) { console.warn('Errore caricamento stato', e); }
   }
 }
@@ -2454,6 +2514,13 @@ function naviga(pagina) {
 }
 
 function renderPagina(pagina) {
+  // Aggiorna badge globali ad ogni cambio pagina (leggero: solo filtro + conteggio)
+  aggiornaBadgeCestino();
+  const nowMs = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+  const nPrioritari = stato.clienti.filter(c => calcolaPunteggioCliente(c, nowMs).score > 0).length;
+  const badge = document.getElementById('badge-giorno');
+  if (badge) badge.textContent = nPrioritari || '0';
+
   if (pagina === 'clienti') renderClienti();
   if (pagina === 'impostazioni') renderImpostazioni();
   if (pagina === 'lista-giorno') renderListaGiorno();
@@ -2461,6 +2528,7 @@ function renderPagina(pagina) {
   if (pagina === 'campagne') renderCampagne();
   if (pagina === 'magazzino') renderMagazzino();
   if (pagina === 'budget') renderBudget();
+  if (pagina === 'scheda-cliente' && clienteAttivoId) renderScheda();
   aggiornaDate();
 }
 
@@ -3197,7 +3265,7 @@ function aggiornaBisogno(sezione, tag, nuovoStato, selectEl) {
 
 function renderTabContatti(c) {
   const contatti = (c.contatti || []).slice().reverse();
-  const canaleIcon = { telefono:'📞', presenza:'🤝', email:'📧', videocall:'💻', note:'📝', senza_risposta:'📵' };
+  const canaleIcon = { telefono:'📞', presenza:'🤝', email:'📧', videocall:'💻', whatsapp:'📱', note:'📝', senza_risposta:'📵' };
 
   return `
     <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
@@ -4064,19 +4132,43 @@ function confermaMappaturaCSV() {
     const cdg = (riga[cdgCol] || '').trim().toUpperCase();
     if (!cdg) return;
     const rs = rsCol !== null ? (riga[rsCol] || '').trim() : '';
-    const clienteInArchivio = stato.clienti.find(c => c.cdg === cdg);
+    let clienteInArchivio = stato.clienti.find(c => c.cdg === cdg);
+
+    // Se il cliente non è in archivio, lo crea automaticamente con dati minimi
+    if (!clienteInArchivio) {
+      clienteInArchivio = {
+        id: uid(),
+        cdg,
+        ragioneSociale: rs || cdg,
+        settore: '',
+        stato: 'prospect',
+        primoCont: '',
+        note: `Inserito automaticamente da campagna "${camp.nome}" il ${formatData(oggi())}`,
+        referenti: [],
+        bisogniAzienda: {},
+        bisogniPrivato: {},
+        contatti: [],
+        impegniFuturi: [],
+        vendite: [],
+        ultimoContatto: null,
+        campagneAttive: [],
+        daCampagna: true
+      };
+      stato.clienti.push(clienteInArchivio);
+      nonTrovati++;
+      nonTrovatiList.push({ cdg, rs });
+    } else {
+      trovati++;
+    }
 
     const entry = {
       cdg,
-      ragioneSociale: clienteInArchivio ? clienteInArchivio.ragioneSociale : rs,
-      clienteId: clienteInArchivio ? clienteInArchivio.id : null,
+      ragioneSociale: clienteInArchivio.ragioneSociale,
+      clienteId: clienteInArchivio.id,
       contattato: false,
       dismisso: false
     };
     camp.clienti.push(entry);
-
-    if (clienteInArchivio) trovati++;
-    else { nonTrovati++; nonTrovatiList.push({ cdg, rs }); }
   });
 
   salvaStato();
@@ -4090,10 +4182,10 @@ function confermaMappaturaCSV() {
       <div class="stat-item"><div class="stat-num" style="color:var(--green)">${trovati}</div><div class="stat-label">Trovati in archivio</div></div>
       <div class="stat-item"><div class="stat-num" style="color:var(--orange)">${nonTrovati}</div><div class="stat-label">Non in archivio</div></div>
     </div>
-    ${nonTrovati ? `<div style="font-size:12px;color:var(--text-2);margin-bottom:8px">Clienti non trovati — appaiono comunque in campagna e lista del giorno:</div>
+    ${nonTrovati ? `<div style="font-size:12px;color:var(--text-2);margin-bottom:8px">Clienti non in archivio — creati automaticamente come prospect:</div>
       <div style="max-height:160px;overflow-y:auto">
         ${nonTrovatiList.map(x => `<div style="font-size:12.5px;padding:5px 8px;background:var(--surface-2);border-radius:4px;margin-bottom:4px;color:var(--orange)">
-          <strong>${escapeHtml(x.cdg)}</strong>${x.rs ? ' — ' + escapeHtml(x.rs) : ''}
+          <strong>${escapeHtml(x.cdg)}</strong>${x.rs ? ' — ' + escapeHtml(x.rs) : ''} <span style="color:var(--text-3);font-size:11px">→ prospect</span>
         </div>`).join('')}
       </div>` : '<div style="color:var(--green);font-size:13px">✓ Tutti i clienti trovati in archivio</div>'}
     <div style="margin-top:14px;padding:12px;background:var(--green-dim);border-radius:var(--radius);color:var(--green);font-size:13px">
