@@ -1,100 +1,99 @@
-# CRM Bancario
+# 🏦 Task Manager Light
 
-**CRM single-page per la gestione clienti in ambito bancario e finanziario.**  
-Un'applicazione web completa, contenuta in un unico file HTML, progettata per gestori e consulenti che vogliono organizzare relazioni commerciali, trattative, campagne e budget di vendita — tutto offline e senza dipendenze server.
+Un task manager pensato per chi lavora nel caos — filiali bancarie, uffici, reception, chiunque venga sommerso da interruzioni continue e deve decidere al volo cosa fare, cosa parcheggiare e cosa non dimenticare.
 
-![Version](https://img.shields.io/badge/versione-1.0-blue)
-![License](https://img.shields.io/badge/licenza-MIT-green)
+Non è un to-do generico. È un sistema di triage.
 
----
+## Il problema che risolve
 
-## Caratteristiche principali
+Lavori in un ambiente dove tutto sembra urgente: il telefono squilla, arriva una mail dalla direzione, un cliente chiede qualcosa allo sportello, un collega ti ferma al volo. Nel caos segui solo le cose percepite come urgenti e lasci indietro quelle importanti — finché è troppo tardi.
 
-### 📋 Lista del giorno
-Sistema intelligente di prioritizzazione giornaliera dei clienti da contattare. L'algoritmo considera scadenze, follow-up in ritardo, frequenza di contatto e campagne attive, generando batch giornalieri con un meccanismo di cooldown per evitare duplicazioni.
+Task Manager Light ti protegge da questo pattern con quattro colonne, zero navigazione e meccanismi visivi che rendono impossibile dimenticare.
 
-### 👥 Gestione clienti
-Anagrafica completa con codice CDG, ragione sociale, settore, rating e categorizzazione (privato/azienda). Ogni scheda cliente include tab dedicati per anagrafica, referenti, bisogni, contatti, impegni futuri, trattative e vendite.
+## Come funziona
 
-### 🔥 Pipeline trattative
-Gestione delle trattative commerciali con fasi progressive: Interesse → Proposta → In delibera → Chiusa (vinta/persa). Visualizzazione con indicatori di valore e scadenze follow-up.
+**Una schermata, quattro colonne:**
 
-### 📢 Campagne
-Organizzazione di campagne commerciali con liste clienti target. Supporta campagne pinned che alimentano automaticamente la lista del giorno.
+- **Inbox** — ci butti tutto in 5 secondi, senza pensare
+- **Oggi** — le 3-5 cose che hai scelto per la giornata
+- **In attesa** — pratiche parcheggiate, con nome di chi ti deve rispondere e contatore dei giorni
+- **Backlog** — tutto il resto, con evidenza visiva sulle cose che invecchiano
 
-### 💰 Budget & Avanzamento
-Definizione di obiettivi di vendita per prodotto (in euro o pezzi), registrazione vendite e monitoraggio dell'avanzamento rispetto ai target con grafici Chart.js.
+**Il flusso quotidiano:**
 
-### ⚙️ Impostazioni
-Gestione tag personalizzati per bisogni, settori e tipologie di contatto. Configurazione prodotti budget, dimensione batch giornaliero e monitoraggio dello spazio localStorage utilizzato.
+1. Arriva qualcosa → scrivi nella barra, Invio, finisce in Inbox
+2. Hai 2 minuti di buco → smisti: trascini le cose dove servono
+3. Fine giornata → completi, il giorno dopo riparti
 
-### 🗑 Cestino
-Soft-delete con possibilità di ripristino per clienti, referenti, contatti, impegni, trattative e vendite.
+## Funzionalità
 
-### 🔍 Ricerca globale
-Ricerca istantanea su tutti i clienti per CDG, ragione sociale o referente.
-
-### 💾 Backup & Ripristino
-Esportazione e importazione dello stato completo in formato JSON. I dati sono persistiti in `localStorage`.
-
----
+- **Input rapidissimo** — scrivi e premi Invio (Inbox) o Ctrl+Invio (diretto in Oggi)
+- **Drag & drop** — tra colonne e dentro le colonne per riordinare
+- **Invecchiamento visivo** — le task nel backlog diventano arancioni dopo 3 giorni, rosse dopo 7
+- **Scadenze** — con evidenza progressiva: fra 3g → domani → oggi → scaduta (con pulsazione)
+- **In attesa di...** — ogni pratica parcheggiata mostra chi la blocca e da quanti giorni
+- **Checklist** — passaggi spuntabili dentro ogni task, con progresso visibile sulla card (es. 3/5)
+- **Note** — campo libero per dettagli, numeri pratica, riferimenti
+- **Task ricorrenti** — giornaliere, settimanali, mensili. Si ricreano automaticamente al completamento
+- **Banner "task da ieri"** — se hai lasciato cose in "Oggi" dal giorno prima, te lo dice
+- **Limite morbido** — se metti più di 5 task in "Oggi", il contatore diventa rosso
+- **Ricerca** — Ctrl+K, cerca nel testo, nelle note e nei nomi di attesa
+- **Categorie** — Amm/Compliance, Clienti, Uffici/Direzione, Interno (con filtri)
+- **Contatore nel tab** — "🎯 3 | Filiale" visibile anche senza cliccare sul tab
+- **Annulla cancellazione** — toast con countdown di 5 secondi per recuperare task eliminate
+- **Backup** — esporta/importa JSON per sicurezza
+- **Animazione di completamento** — micro-soddisfazione a ogni task chiusa
 
 ## Requisiti
 
-Nessuno. Basta un browser moderno:
+Nessuno. È un singolo file HTML. Serve solo un browser.
 
-- Google Chrome (consigliato)
-- Firefox
-- Safari
-- Edge
+## Installazione
 
-Non richiede server, database, installazione o connessione internet (dopo il primo caricamento dei font Google).
+1. Scarica `filiale-task-manager.html`
+2. Doppio click → si apre nel browser
+3. Opzionale: aggiungilo ai preferiti (Ctrl+D)
 
----
+## Dati e privacy
 
-## Utilizzo
+Tutti i dati restano nel browser (localStorage). Nessun server, nessun account, nessun tracciamento. I dati vivono sul tuo PC e non escono mai.
 
-1. Scarica il file `crm_fase3.html`
-2. Aprilo nel browser
-3. Inizia ad aggiungere clienti
+Fai backup regolari con il bottone 💾 se usi lo strumento per lavoro.
 
-I dati vengono salvati automaticamente nel `localStorage` del browser.
+## Scorciatoie da tastiera
 
-> **⚠️ Nota:** i dati sono legati al browser e al dispositivo. Usa la funzione di backup (JSON) per trasferirli o per sicurezza.
-
----
-
-## Stack tecnico
-
-| Componente | Tecnologia |
+| Scorciatoia | Azione |
 |---|---|
-| Frontend | HTML5, CSS3, JavaScript vanilla |
-| UI fonts | Cormorant Garamond, Jost (Google Fonts) |
-| Grafici | Chart.js 4.4.1 (CDN) |
-| Persistenza | localStorage |
-| Architettura | Single-file, zero dipendenze server |
+| `Invio` | Aggiungi task in Inbox |
+| `Ctrl+Invio` | Aggiungi task in Oggi |
+| `Ctrl+K` | Apri/chiudi ricerca |
+| `Esc` | Chiudi modale/ricerca |
+| `Doppio click` | Modifica testo task |
 
----
+## Per chi è
 
-## Struttura dati
+- Operatori di filiale bancaria
+- Chiunque lavori con interruzioni continue
+- Chi ha bisogno di uno strumento veloce senza setup
+- Chi non vuole registrarsi a nulla
 
-Lo stato dell'applicazione è un oggetto JSON salvato in `localStorage` con chiave `crmBancario`. Contiene:
+## Per chi non è
 
-- `clienti` — array di oggetti cliente con referenti, contatti, impegni e bisogni annidati
-- `trattative` — array di trattative commerciali collegate ai clienti
-- `budget` — obiettivi e vendite per prodotto
-- `campagne` — campagne commerciali con liste target
-- `cestino` — elementi eliminati recuperabili
-- `impostazioni` — tag personalizzati, prodotti e configurazione
+- Team che hanno bisogno di collaborazione in tempo reale
+- Chi cerca integrazioni con email/calendar
+- Chi ha bisogno di sync tra dispositivi
 
----
+## Stack
 
-## Licenza
-
-Questo progetto è rilasciato sotto licenza [MIT](LICENSE).
-
----
+- HTML + CSS + React 18 (via CDN)
+- localStorage per la persistenza
+- Zero dipendenze da installare
+- Zero build step
 
 ## Autore
 
-**Duccio Ruozzi** — Marzo 2026
+**Duccio Ruozzi** — nato dall'esigenza di gestire task che si accumulano in contesti caotici.
+
+## Licenza
+
+MIT — vedi [LICENSE](LICENSE) per i dettagli.
